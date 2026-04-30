@@ -82,8 +82,6 @@ export async function checkApiStatusAction(): Promise<{
   return fetchApiStatus();
 }
 
-export const STAGES = ["Group Stage", "Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Third Place", "Final"] as const;
-
 export async function upsertMatchAction(input: {
   id?: string;
   homeTeamId: string;

@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { upsertMatchAction, deleteMatchAction, STAGES } from "./actions";
+import { upsertMatchAction, deleteMatchAction } from "./actions";
+
+const STAGES = ["Group Stage", "Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Third Place", "Final"] as const;
 
 type Team = { id: string; name: string; tier: string; flagUrl: string | null; group: string };
 type MatchRow = {
