@@ -22,6 +22,12 @@ export default async function AccountPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
+  // Clear notification dot when page is visited
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { hasNotification: false },
+  });
+
   const [user, trades] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },

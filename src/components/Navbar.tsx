@@ -6,9 +6,10 @@ export default async function Navbar() {
   const session = await auth();
   if (!session) return null;
 
-  const pendingTrades = await prisma.trade.count({
-    where: { recipientId: session.user.id, status: "PENDING" },
-  });
+  const [pendingTrades, me] = await Promise.all([
+    prisma.trade.count({ where: { recipientId: session.user.id, status: "PENDING" } }),
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { hasNotification: true } }),
+  ]);
 
   return (
     <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -41,8 +42,11 @@ export default async function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link href="/account" className="text-xs text-gray-400 hidden sm:block hover:text-gray-700 transition-colors">
+          <Link href="/account" className="relative text-xs text-gray-400 hidden sm:block hover:text-gray-700 transition-colors">
             {session.user.email}
+            {me?.hasNotification && (
+              <span className="absolute -top-1 -right-2 w-2 h-2 bg-red-500 rounded-full" />
+            )}
           </Link>
           <form
             action={async () => {

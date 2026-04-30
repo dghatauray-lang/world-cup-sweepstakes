@@ -53,19 +53,22 @@ export async function proposeTradeAction(
     prisma.team.findMany({ where: { id: { in: requestedTeamIds } }, select: { name: true } }),
   ]);
 
-  await prisma.trade.create({
-    data: {
-      proposerId,
-      recipientId,
-      message: message.trim() || null,
-      items: {
-        create: [
-          ...offeredTeamIds.map((teamId) => ({ teamId, direction: "OFFERED" as const })),
-          ...requestedTeamIds.map((teamId) => ({ teamId, direction: "REQUESTED" as const })),
-        ],
+  await Promise.all([
+    prisma.trade.create({
+      data: {
+        proposerId,
+        recipientId,
+        message: message.trim() || null,
+        items: {
+          create: [
+            ...offeredTeamIds.map((teamId) => ({ teamId, direction: "OFFERED" as const })),
+            ...requestedTeamIds.map((teamId) => ({ teamId, direction: "REQUESTED" as const })),
+          ],
+        },
       },
-    },
-  });
+    }),
+    prisma.user.update({ where: { id: recipientId }, data: { hasNotification: true } }),
+  ]);
 
   // Fire-and-forget email — don't block the response
   if (recipient) {
@@ -108,7 +111,10 @@ export async function respondToTradeAction(
   ]);
 
   if (!accept) {
-    await prisma.trade.update({ where: { id: tradeId }, data: { status: "REJECTED" } });
+    await Promise.all([
+      prisma.trade.update({ where: { id: tradeId }, data: { status: "REJECTED" } }),
+      prisma.user.update({ where: { id: trade.proposerId }, data: { hasNotification: true } }),
+    ]);
     if (proposer) {
       sendTradeRespondedEmail({
         to: proposer.email,
@@ -142,6 +148,7 @@ export async function respondToTradeAction(
       prisma.userTeam.update({ where: { id: ut.id }, data: { userId: trade.proposerId } })
     ),
     prisma.trade.update({ where: { id: tradeId }, data: { status: "ACCEPTED" } }),
+    prisma.user.update({ where: { id: trade.proposerId }, data: { hasNotification: true } }),
   ]);
 
   if (proposer) {
@@ -195,6 +202,8 @@ export async function vetoTradeAction(tradeId: string): Promise<{ error?: string
       prisma.userTeam.update({ where: { id: ut.id }, data: { userId: trade.recipientId } })
     ),
     prisma.trade.update({ where: { id: tradeId }, data: { status: "VETOED" } }),
+    prisma.user.update({ where: { id: trade.proposerId  }, data: { hasNotification: true } }),
+    prisma.user.update({ where: { id: trade.recipientId }, data: { hasNotification: true } }),
   ]);
 
   // Notify both parties
