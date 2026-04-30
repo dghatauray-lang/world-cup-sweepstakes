@@ -5,6 +5,7 @@ import DraftPanel from "./DraftPanel";
 import SyncPanel from "./SyncPanel";
 import TradesPanel from "./TradesPanel";
 import AdjustPanel from "./AdjustPanel";
+import ResetDraftButton from "./ResetDraftButton";
 
 const TIER_COLORS: Record<string, string> = {
   S: "bg-purple-100 text-purple-800",
@@ -109,9 +110,12 @@ export default async function AdminPage() {
       <section>
         <h2 className="text-lg font-semibold mb-1">Draft</h2>
         {draftDone ? (
-          <p className="text-sm text-gray-500 mb-4">
-            Draft ran on {gameState?.draftAt ? new Date(gameState.draftAt).toLocaleString() : "unknown date"}.
-          </p>
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
+            <p className="text-sm text-gray-500">
+              Draft ran on {gameState?.draftAt ? new Date(gameState.draftAt).toLocaleString() : "unknown date"}.
+            </p>
+            <ResetDraftButton />
+          </div>
         ) : (
           <p className="text-sm text-gray-500 mb-4">
             Generate a preview to see how the 48 teams will be distributed, then confirm to lock it in.

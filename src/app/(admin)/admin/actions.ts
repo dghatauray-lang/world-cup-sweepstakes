@@ -82,6 +82,21 @@ export async function checkApiStatusAction(): Promise<{
   return fetchApiStatus();
 }
 
+export async function resetDraftAction(): Promise<void> {
+  await assertAdmin();
+  await prisma.$transaction([
+    prisma.userTeam.deleteMany({}),
+    prisma.trade.deleteMany({}),
+    prisma.gameState.update({
+      where: { id: "singleton" },
+      data: { draftDone: false, draftAt: null },
+    }),
+  ]);
+  revalidatePath("/admin");
+  revalidatePath("/dashboard");
+  revalidatePath("/leaderboard");
+}
+
 export async function adjustPointsAction(
   userId: string,
   teamId: string,
