@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Tier {
+  S
+  A
+  B
+  C
+}
+
+enum TradeStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  VETOED
+}
+
+enum TradeDirection {
+  OFFERED
+  REQUESTED
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  role          Role      @default(USER)
+  isHouse       Boolean   @default(false)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+
+  accounts       Account[]
+  sessions       Session[]
+  teams          UserTeam[]
+  proposedTrades Trade[]   @relation("Proposer")
+  receivedTrades Trade[]   @relation("Recipient")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Team {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  country   String
+  tier      Tier
+  group     String
+  flagUrl   String?
+  apiTeamId Int?    @unique
+
+  owners      UserTeam[]
+  homeMatches Match[]    @relation("HomeTeam")
+  awayMatches Match[]    @relation("AwayTeam")
+  tradeItems  TradeItem[]
+}
+
+model UserTeam {
+  id         String   @id @default(cuid())
+  userId     String
+  teamId     String
+  points     Int      @default(0)
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+}
+
+model Match {
+  id         String      @id @default(cuid())
+  apiMatchId Int?        @unique
+  homeTeamId String
+  awayTeamId String
+  homeScore  Int?
+  awayScore  Int?
+  stage      String
+  kickoff    DateTime
+  status     MatchStatus @default(SCHEDULED)
+  updatedAt  DateTime    @updatedAt
+
+  homeTeam Team @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam Team @relation("AwayTeam", fields: [awayTeamId], references: [id])
+}
+
+model SyncLog {
+  id             String   @id @default(cuid())
+  syncedAt       DateTime @default(now())
+  matchesUpdated Int
+  success        Boolean
+  error          String?
+}
+
+model Trade {
+  id          String      @id @default(cuid())
+  proposerId  String
+  recipientId String
+  status      TradeStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  proposer  User        @relation("Proposer", fields: [proposerId], references: [id])
+  recipient User        @relation("Recipient", fields: [recipientId], references: [id])
+  items     TradeItem[]
+}
+
+model TradeItem {
+  id        String         @id @default(cuid())
+  tradeId   String
+  teamId    String
+  direction TradeDirection
+
+  trade Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  team  Team  @relation(fields: [teamId], references: [id])
+}
+
+model GameState {
+  id        String    @id @default("singleton")
+  draftDone Boolean   @default(false)
+  draftAt   DateTime?
+}

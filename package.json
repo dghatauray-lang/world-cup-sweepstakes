@@ -3,24 +3,44 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "node node_modules/next/dist/bin/next dev",
+    "build": "node node_modules/next/dist/bin/next build",
+    "start": "node node_modules/next/dist/bin/next start",
+    "lint": "eslint",
+    "db:generate": "node node_modules/prisma/build/index.js generate",
+    "db:migrate": "node node_modules/prisma/build/index.js migrate dev",
+    "db:push": "node node_modules/prisma/build/index.js db push",
+    "db:seed": "node node_modules/ts-node/dist/bin.js --project tsconfig.seed.json prisma/seed.ts",
+    "db:seed-test-users": "node node_modules/ts-node/dist/bin.js --project tsconfig.seed.json prisma/seed-test-users.ts",
+    "db:studio": "node node_modules/prisma/build/index.js studio"
+  },
+  "prisma": {
+    "seed": "node node_modules/ts-node/dist/bin.js --project tsconfig.seed.json prisma/seed.ts"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "^2.11.2",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
     "next": "16.2.4",
+    "next-auth": "^5.0.0-beta.31",
+    "pg": "^8.20.0",
+    "prisma": "^5.22.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "resend": "^6.12.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
   }
 }
