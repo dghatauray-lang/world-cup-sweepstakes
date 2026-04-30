@@ -41,7 +41,9 @@ export default async function Navbar() {
         </div>
 
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400 hidden sm:block">{session.user.email}</span>
+          <Link href="/account" className="text-xs text-gray-400 hidden sm:block hover:text-gray-700 transition-colors">
+            {session.user.email}
+          </Link>
           <form
             action={async () => {
               "use server";
