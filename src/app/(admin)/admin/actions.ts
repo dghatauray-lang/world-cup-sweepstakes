@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateAssignments, commitDraft } from "@/lib/draft";
-import { runSync, type SyncResult } from "@/lib/sync";
+import { runSync, recalculateAllPoints, type SyncResult } from "@/lib/sync";
 import { fetchApiStatus } from "@/lib/sports-api";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -80,6 +80,57 @@ export async function checkApiStatusAction(): Promise<{
 }> {
   await assertAdmin();
   return fetchApiStatus();
+}
+
+export const STAGES = ["Group Stage", "Round of 32", "Round of 16", "Quarter-final", "Semi-final", "Third Place", "Final"] as const;
+
+export async function upsertMatchAction(input: {
+  id?: string;
+  homeTeamId: string;
+  awayTeamId: string;
+  stage: string;
+  kickoff: string;
+  homeScore: number | null;
+  awayScore: number | null;
+  status: "SCHEDULED" | "LIVE" | "FINISHED";
+}): Promise<{ error?: string }> {
+  await assertAdmin();
+  if (input.homeTeamId === input.awayTeamId) return { error: "Teams must be different." };
+  if (input.status === "FINISHED" && (input.homeScore === null || input.awayScore === null))
+    return { error: "Scores are required for finished matches." };
+
+  const data = {
+    homeTeamId: input.homeTeamId,
+    awayTeamId: input.awayTeamId,
+    stage: input.stage,
+    kickoff: new Date(input.kickoff),
+    homeScore: input.homeScore,
+    awayScore: input.awayScore,
+    status: input.status,
+  };
+
+  if (input.id) {
+    await prisma.match.update({ where: { id: input.id }, data });
+  } else {
+    await prisma.match.create({ data });
+  }
+
+  await recalculateAllPoints();
+  revalidatePath("/admin");
+  revalidatePath("/tournament");
+  revalidatePath("/dashboard");
+  revalidatePath("/leaderboard");
+  return {};
+}
+
+export async function deleteMatchAction(id: string): Promise<void> {
+  await assertAdmin();
+  await prisma.match.delete({ where: { id } });
+  await recalculateAllPoints();
+  revalidatePath("/admin");
+  revalidatePath("/tournament");
+  revalidatePath("/dashboard");
+  revalidatePath("/leaderboard");
 }
 
 export async function resetDraftAction(): Promise<void> {

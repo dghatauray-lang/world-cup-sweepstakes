@@ -6,6 +6,7 @@ import SyncPanel from "./SyncPanel";
 import TradesPanel from "./TradesPanel";
 import AdjustPanel from "./AdjustPanel";
 import ResetDraftButton from "./ResetDraftButton";
+import MatchPanel from "./MatchPanel";
 
 const TIER_COLORS: Record<string, string> = {
   S: "bg-purple-100 text-purple-800",
@@ -18,7 +19,7 @@ export default async function AdminPage() {
   const session = await auth();
   if (!session || session.user.role !== "ADMIN") redirect("/dashboard");
 
-  const [gameState, users, assignments, syncLogs, allTrades] = await Promise.all([
+  const [gameState, users, assignments, syncLogs, allTrades, allTeams, allMatches] = await Promise.all([
     prisma.gameState.findUnique({ where: { id: "singleton" } }),
     prisma.user.findMany({
       where: { isHouse: false },
@@ -39,6 +40,14 @@ export default async function AdminPage() {
         items: { include: { team: { select: { id: true, name: true, tier: true, flagUrl: true } } } },
       },
       orderBy: { createdAt: "desc" },
+    }),
+    prisma.team.findMany({ orderBy: { name: "asc" } }),
+    prisma.match.findMany({
+      include: {
+        homeTeam: { select: { id: true, name: true, tier: true, flagUrl: true, group: true } },
+        awayTeam: { select: { id: true, name: true, tier: true, flagUrl: true, group: true } },
+      },
+      orderBy: { kickoff: "asc" },
     }),
   ]);
 
@@ -134,6 +143,18 @@ export default async function AdminPage() {
           Use the button below to trigger a manual sync or verify the API connection.
         </p>
         <SyncPanel recentLogs={syncLogs} />
+      </section>
+
+      {/* Match Results */}
+      <section>
+        <h2 className="text-lg font-semibold mb-1">Match Results</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Manually enter match results. Points recalculate automatically on each save.
+        </p>
+        <MatchPanel
+          teams={allTeams}
+          matches={allMatches}
+        />
       </section>
 
       {/* Trades */}

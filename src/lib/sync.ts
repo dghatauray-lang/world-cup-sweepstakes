@@ -38,10 +38,8 @@ async function resolveTeamId(
   return teamId ?? null;
 }
 
-// Recalculate every user's points from scratch using all finished matches in the DB.
-// This is intentionally called after every sync so the numbers are always correct,
-// even if the points formula is later adjusted.
-async function recalculateAllPoints() {
+// Exported so admin actions can trigger recalculation after manual match entry.
+export async function recalculateAllPoints() {
   const matches = await prisma.match.findMany({
     where: { status: "FINISHED" },
   });

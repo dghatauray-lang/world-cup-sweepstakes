@@ -22,8 +22,11 @@ export default async function Navbar() {
             <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 transition-colors">
               My Teams
             </Link>
-            <Link href="/leaderboard" className="text-gray-600 hover:text-gray-900 transition-colors hidden xs:block sm:block">
+            <Link href="/leaderboard" className="text-gray-600 hover:text-gray-900 transition-colors hidden sm:block">
               Leaderboard
+            </Link>
+            <Link href="/tournament" className="text-gray-600 hover:text-gray-900 transition-colors hidden sm:block">
+              Tournament
             </Link>
             <Link href="/trades" className="relative text-gray-600 hover:text-gray-900 transition-colors">
               Trades
