@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import DraftPanel from "./DraftPanel";
-import SyncPanel from "./SyncPanel";
 import TradesPanel from "./TradesPanel";
 import AdjustPanel from "./AdjustPanel";
 import ResetDraftButton from "./ResetDraftButton";
@@ -19,7 +18,7 @@ export default async function AdminPage() {
   const session = await auth();
   if (!session || session.user.role !== "ADMIN") redirect("/dashboard");
 
-  const [gameState, users, assignments, syncLogs, allTrades, allTeams, allMatches] = await Promise.all([
+  const [gameState, users, assignments, , allTrades, allTeams, allMatches] = await Promise.all([
     prisma.gameState.findUnique({ where: { id: "singleton" } }),
     prisma.user.findMany({
       where: { isHouse: false },
@@ -32,7 +31,7 @@ export default async function AdminPage() {
       },
       orderBy: { assignedAt: "asc" },
     }),
-    prisma.syncLog.findMany({ orderBy: { syncedAt: "desc" }, take: 10 }),
+    Promise.resolve([]),
     prisma.trade.findMany({
       include: {
         proposer:  { select: { name: true, email: true } },
@@ -133,16 +132,6 @@ export default async function AdminPage() {
         )}
 
         {!draftDone && <DraftPanel userCount={users.length} />}
-      </section>
-
-      {/* Score Sync */}
-      <section>
-        <h2 className="text-lg font-semibold mb-1">Score Sync</h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Runs automatically every 15 minutes via Vercel Cron once deployed.
-          Use the button below to trigger a manual sync or verify the API connection.
-        </p>
-        <SyncPanel recentLogs={syncLogs} />
       </section>
 
       {/* Match Results */}
