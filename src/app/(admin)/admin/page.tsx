@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import DraftPanel from "./DraftPanel";
+import UsersPanel from "./UsersPanel";
 import TradesPanel from "./TradesPanel";
 import AdjustPanel from "./AdjustPanel";
 import ResetDraftButton from "./ResetDraftButton";
@@ -89,29 +90,10 @@ export default async function AdminPage() {
         </span>
       </div>
 
-      {/* Registered Users */}
+      {/* Users */}
       <section>
-        <h2 className="text-lg font-semibold mb-3">Registered Users ({users.length})</h2>
-        {users.length === 0 ? (
-          <p className="text-gray-400 text-sm">No users have signed up yet.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-            {users.map((u) => (
-              <div key={u.id} className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm">
-                <span className="w-7 h-7 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                  {(u.name ?? u.email)[0].toUpperCase()}
-                </span>
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{u.name ?? "—"}</p>
-                  <p className="text-gray-400 text-xs truncate">{u.email}</p>
-                </div>
-                {u.role === "ADMIN" && (
-                  <span className="ml-auto text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full flex-shrink-0">Admin</span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <h2 className="text-lg font-semibold mb-3">Users ({users.length})</h2>
+        <UsersPanel users={users.map((u) => ({ id: u.id, name: u.name, email: u.email, role: u.role }))} />
       </section>
 
       {/* Draft Section */}

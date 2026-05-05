@@ -7,6 +7,7 @@ import { runSync, recalculateAllPoints, type SyncResult } from "@/lib/sync";
 import { fetchApiStatus } from "@/lib/sports-api";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { hash } from "bcryptjs";
 
 async function assertAdmin() {
   const session = await auth();
@@ -173,4 +174,44 @@ export async function reassignTeamAction(
   revalidatePath("/admin");
   revalidatePath("/dashboard");
   revalidatePath("/leaderboard");
+}
+
+export async function createUserAction(input: {
+  email: string;
+  name: string;
+  password: string;
+  role: "USER" | "ADMIN";
+}): Promise<{ error?: string }> {
+  await assertAdmin();
+  const existing = await prisma.user.findUnique({ where: { email: input.email } });
+  if (existing) return { error: "A user with that email already exists." };
+  const hashed = await hash(input.password, 12);
+  await prisma.user.create({
+    data: {
+      email: input.email,
+      name: input.name || null,
+      password: hashed,
+      role: input.role,
+    },
+  });
+  revalidatePath("/admin");
+  return {};
+}
+
+export async function deleteUserAction(userId: string): Promise<{ error?: string }> {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN") redirect("/login");
+  if (userId === session.user.id) return { error: "You cannot delete your own account." };
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) return { error: "User not found." };
+  if (user.isHouse) return { error: "Cannot delete the house account." };
+  await prisma.$transaction([
+    prisma.userTeam.deleteMany({ where: { userId } }),
+    prisma.trade.deleteMany({ where: { OR: [{ proposerId: userId }, { recipientId: userId }] } }),
+    prisma.user.delete({ where: { id: userId } }),
+  ]);
+  revalidatePath("/admin");
+  revalidatePath("/leaderboard");
+  revalidatePath("/dashboard");
+  return {};
 }
