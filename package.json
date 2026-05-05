@@ -12,6 +12,7 @@
     "db:push": "node node_modules/prisma/build/index.js db push",
     "db:seed": "node node_modules/ts-node/dist/bin.js --project tsconfig.seed.json prisma/seed.ts",
     "db:seed-test-users": "node node_modules/ts-node/dist/bin.js --project tsconfig.seed.json prisma/seed-test-users.ts",
+    "db:seed-matches": "node node_modules/ts-node/dist/bin.js --project tsconfig.seed.json prisma/seed-matches.ts",
     "db:studio": "node node_modules/prisma/build/index.js studio"
   },
   "prisma": {
