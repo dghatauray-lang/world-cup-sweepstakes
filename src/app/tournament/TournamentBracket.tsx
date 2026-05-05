@@ -225,10 +225,10 @@ function TeamRow({ team, myTeamIds, pos }: { team: { team: Team; pts: number; p:
 // ── Group card ───────────────────────────────────────────────────────────────
 
 function GroupCard({
-  group, teams, matches, myTeamIds, isAdmin, onClickMatch, onAddMatch,
+  group, teams, matches, myTeamIds, isAdmin, onClickMatch,
 }: {
   group: string; teams: Team[]; matches: Match[]; myTeamIds: Set<string>;
-  isAdmin: boolean; onClickMatch: (m: Match) => void; onAddMatch: (group: string) => void;
+  isAdmin: boolean; onClickMatch: (m: Match) => void;
 }) {
   const standings = calcStandings(group, teams, matches);
   const groupMatches = matches.filter(
@@ -237,12 +237,8 @@ function GroupCard({
 
   return (
     <div className="rounded-xl border border-gray-200 overflow-hidden text-xs bg-white">
-      <div className="bg-gray-50 border-b border-gray-200 px-3 py-1.5 flex items-center justify-between">
+      <div className="bg-gray-50 border-b border-gray-200 px-3 py-1.5">
         <span className="font-bold text-sm text-gray-700">Group {group}</span>
-        {isAdmin && (
-          <button onClick={() => onAddMatch(group)}
-            className="text-[10px] text-green-600 hover:text-green-800 font-semibold">+ Add</button>
-        )}
       </div>
 
       <table className="w-full">
@@ -428,7 +424,6 @@ export default function TournamentBracket({
                   myTeamIds={myTeamIds}
                   isAdmin={isAdmin}
                   onClickMatch={openEdit}
-                  onAddMatch={openAdd}
                 />
               );
             })}
