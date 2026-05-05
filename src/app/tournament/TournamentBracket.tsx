@@ -199,23 +199,25 @@ function TeamRow({ team, myTeamIds, pos }: { team: { team: Team; pts: number; p:
   const isMe = myTeamIds.has(team.team.id);
   const qualified = pos <= 2;
   return (
-    <tr className={`${isMe ? "bg-green-50" : ""}`}>
-      <td className="px-2 py-1">
-        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold
+    <tr className={isMe ? "bg-green-50" : ""}>
+      <td className="pl-3 pr-1 py-1.5 w-7">
+        <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0
           ${qualified ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-400"}`}>
           {pos}
         </span>
       </td>
-      <td className="px-1 py-1">
-        <div className="flex items-center gap-1.5">
-          {team.team.flagUrl && <img src={team.team.flagUrl} alt="" className="w-4 h-2.5 object-cover rounded-sm flex-shrink-0" />}
-          <span className={`text-xs font-medium truncate max-w-[90px] ${isMe ? "text-green-700 font-bold" : ""}`}>
+      <td className="py-1.5 pr-2">
+        <div className="flex items-center gap-2">
+          {team.team.flagUrl
+            ? <img src={team.team.flagUrl} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />
+            : <span className="w-5 h-3.5 flex-shrink-0" />}
+          <span className={`text-xs font-medium leading-tight ${isMe ? "text-green-700 font-semibold" : "text-gray-800"}`}>
             {team.team.name}{isMe ? " ★" : ""}
           </span>
         </div>
       </td>
-      <td className="text-center text-xs text-gray-500 px-1 py-1 w-6">{team.p}</td>
-      <td className="text-center text-xs font-bold px-1 py-1 w-8">{team.pts}</td>
+      <td className="text-center text-xs text-gray-400 py-1.5 w-7">{team.p}</td>
+      <td className="text-center text-xs font-bold text-gray-700 py-1.5 pr-3 w-8">{team.pts}</td>
     </tr>
   );
 }
@@ -246,10 +248,10 @@ function GroupCard({
       <table className="w-full">
         <thead>
           <tr className="text-gray-400 border-b border-gray-100">
-            <th className="w-6 px-2 py-1" />
-            <th className="text-left px-1 py-1 font-medium">Team</th>
-            <th className="text-center px-1 py-1 font-medium w-6">P</th>
-            <th className="text-center px-1 py-1 font-medium w-8">Pts</th>
+            <th className="w-7 pl-3" />
+            <th className="text-left py-1.5 text-[11px] font-medium">Team</th>
+            <th className="text-center py-1.5 text-[11px] font-medium w-7">P</th>
+            <th className="text-center py-1.5 text-[11px] font-medium pr-3 w-8">Pts</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
@@ -267,18 +269,41 @@ function GroupCard({
             const hasMe    = myTeamIds.has(m.homeTeam.id) || myTeamIds.has(m.awayTeam.id);
             return (
               <div key={m.id}
-                className={`flex items-center gap-1 px-2 py-1.5 ${hasMe ? "bg-green-50" : ""} ${isAdmin ? "cursor-pointer hover:bg-gray-50" : ""}`}
+                className={`grid grid-cols-[1fr_2.5rem_1fr] items-center px-3 py-1.5 gap-x-1
+                  ${hasMe ? "bg-green-50" : ""}
+                  ${isAdmin ? "cursor-pointer hover:bg-gray-50 active:bg-gray-100" : ""}`}
                 onClick={() => isAdmin && onClickMatch(m)}>
-                <div className="flex items-center gap-1 flex-1 min-w-0 justify-end">
-                  {m.homeTeam.flagUrl && <img src={m.homeTeam.flagUrl} alt="" className="w-3.5 h-2.5 object-cover rounded-sm flex-shrink-0" />}
-                  <span className={`truncate font-medium ${myTeamIds.has(m.homeTeam.id) ? "text-green-700" : ""}`}>{m.homeTeam.name}</span>
+                {/* Home */}
+                <div className="flex items-center gap-1.5 overflow-hidden">
+                  {m.homeTeam.flagUrl
+                    ? <img src={m.homeTeam.flagUrl} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />
+                    : <span className="w-5 flex-shrink-0" />}
+                  <span className={`text-xs font-medium truncate ${myTeamIds.has(m.homeTeam.id) ? "text-green-700 font-semibold" : "text-gray-800"}`}>
+                    {m.homeTeam.name}
+                  </span>
                 </div>
-                <div className="flex-shrink-0 w-14 text-center font-mono font-bold text-gray-700">
-                  {finished ? `${m.homeScore}–${m.awayScore}` : live ? <span className="text-green-600 animate-pulse text-[10px]">LIVE</span> : "vs"}
+                {/* Score / date */}
+                <div className="text-center flex-shrink-0">
+                  {finished ? (
+                    <span className="text-xs font-mono font-bold text-gray-700">
+                      {m.homeScore}–{m.awayScore}
+                    </span>
+                  ) : live ? (
+                    <span className="text-[10px] font-bold text-green-600 animate-pulse">LIVE</span>
+                  ) : (
+                    <span className="text-[10px] text-gray-400 leading-tight block text-center">
+                      {new Date(m.kickoff).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-1 flex-1 min-w-0">
-                  <span className={`truncate font-medium ${myTeamIds.has(m.awayTeam.id) ? "text-green-700" : ""}`}>{m.awayTeam.name}</span>
-                  {m.awayTeam.flagUrl && <img src={m.awayTeam.flagUrl} alt="" className="w-3.5 h-2.5 object-cover rounded-sm flex-shrink-0" />}
+                {/* Away */}
+                <div className="flex items-center gap-1.5 overflow-hidden flex-row-reverse">
+                  {m.awayTeam.flagUrl
+                    ? <img src={m.awayTeam.flagUrl} alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" />
+                    : <span className="w-5 flex-shrink-0" />}
+                  <span className={`text-xs font-medium truncate text-right ${myTeamIds.has(m.awayTeam.id) ? "text-green-700 font-semibold" : "text-gray-800"}`}>
+                    {m.awayTeam.name}
+                  </span>
                 </div>
               </div>
             );
@@ -390,7 +415,7 @@ export default function TournamentBracket({
         {/* Group Stage */}
         <section>
           <h2 className="text-lg font-bold mb-4">Group Stage</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {["A","B","C","D","E","F","G","H","I","J","K","L"].map((group) => {
               const groupTeams = teams.filter((t) => t.group === group);
               if (groupTeams.length === 0) return null;
